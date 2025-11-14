@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Michael Dultsin's Fun Facts</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('funFacts')">Fun Facts</div>
+    <div class="tab" onclick="showTab('moreStuff')">More Stuff</div>
+    <div class="tab" onclick="showTab('newTab')">New Tab</div>
+  </div>
+
+  <!-- Fun Facts Tab -->
+  <div id="funFacts" class="tab-content active">
+    <section>
+      <h1>Michael Dultsin</h1>
+      <img src="homoerectus.jpeg" alt="Michael's picture">
+    </section>
+
+    <section>
+      <h2>Fun Fact #1</h2>
+      <p>I like to do pullups.</p>
+      <button onclick="togglePopup(this)">More Info</button>
+      <div class="popup">I have done 20 pullups in a row!</div>
+    </section>
+
+    <section>
+      <h2>Fun Fact #2</h2>
+      <p>I like to play Fortnite.</p>
+      <button onclick="togglePopup(this)">More Info</button>
+      <div class="popup">I started playing Fortnite in 2018!</div>
+    </section>
+
+    <section>
+      <h2>Fun Fact #3</h2>
+      <p>I speak Chinese.</p>
+      <button onclick="togglePopup(this)">More Info</button>
+      <div class="popup">I have been learning Chinese for 2 years!</div>
+    </section>
+  </div>
+
+  <!-- More Stuff Tab -->
+  <div id="moreStuff" class="tab-content">
+    <h2>More Stuff</h2>
+    <!-- Embedded YouTube Video with Start Time -->
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/SQyzaavIaoA?start=6" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+  </div>
+
+  <!-- New Tab -->
+  <div id="newTab" class="tab-content">
+    <h2>New Tab</h2>
+    <p>Here’s some other cool stuff about me!</p>
+  </div>
+
+  <!-- JavaScript -->
+  <script>
+    function showTab(tabId) {
+      document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+      document.querySelector(`.tab[onclick="showTab('${tabId}')"]`).classList.add('active');
+      document.getElementById(tabId).classList.add('active');
+    }
+
+    function togglePopup(button) {
+      const popup = button.nextElementSibling;
+      popup.classList.toggle('show');
+    }
+  </script>
+
+</body>
+</html>
