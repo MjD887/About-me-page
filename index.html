@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Michael Dultsin's Fun Facts</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    html {
+      scroll-behavior: auto;
+    }
+  </style>
 </head>
 <body>
 
@@ -26,21 +31,21 @@
       <h2>Fun Fact #1</h2>
       <p>I like to do pullups.</p>
       <button onclick="togglePopup(this)">More Info</button>
-      <div class="popup">I have done 20 pullups in a row!</div>
+      <div class="popup">I have done 12 pullups in a row</div>
     </section>
 
     <section>
       <h2>Fun Fact #2</h2>
       <p>I like to play Fortnite.</p>
       <button onclick="togglePopup(this)">More Info</button>
-      <div class="popup">I started playing Fortnite in 2018!</div>
+      <div class="popup"></div>
     </section>
 
     <section>
       <h2>Fun Fact #3</h2>
       <p>I speak Chinese.</p>
       <button onclick="togglePopup(this)">More Info</button>
-      <div class="popup">I have been learning Chinese for 2 years!</div>
+      <div class="popup">I have been learning Chinese for 4 years!</div>
     </section>
   </div>
 
@@ -54,11 +59,22 @@
   <!-- New Tab -->
   <div id="newTab" class="tab-content">
     <h2>New Tab</h2>
-    <p>Here’s some other cool stuff about me!</p>
+    <p>Here's some other cool stuff about me!</p>
+    
+    <div style="display: flex; justify-content: center; align-items: center; min-height: 60vh;">
+      <section style="width: 400px; height: 400px; padding: 0; display: flex; align-items: center; justify-content: center;">
+        <canvas id="kaleidoscope" width="400" height="400" style="border-radius: 10px; cursor: crosshair; display: block;"></canvas>
+      </section>
+    </div>
   </div>
 
   <!-- JavaScript -->
   <script>
+    // Scroll to top on page load
+    window.addEventListener('load', () => {
+      window.scrollTo(0, 0);
+    });
+
     function showTab(tabId) {
       document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
@@ -70,6 +86,205 @@
       const popup = button.nextElementSibling;
       popup.classList.toggle('show');
     }
+
+    // Kaleidoscope
+    const canvas = document.getElementById('kaleidoscope');
+    const ctx = canvas.getContext('2d');
+    let mouseX = canvas.width / 2;
+    let mouseY = canvas.height / 2;
+    let points = [];
+    let clickCount = 0;
+    let gameActive = false;
+
+    // Draw octagon helper
+    function drawOctagon(ctx, x, y, size, fillColor, opacity = 1) {
+      ctx.save();
+      ctx.globalAlpha = opacity;
+      ctx.fillStyle = fillColor;
+      ctx.beginPath();
+      for (let i = 0; i < 8; i++) {
+        const angle = (i * Math.PI * 2) / 8 - Math.PI / 8;
+        const px = x + size * Math.cos(angle);
+        const py = y + size * Math.sin(angle);
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+    canvas.addEventListener('click', () => {
+      if (countdownActive) return;
+      clickCount++;
+      if (clickCount === 2) {
+        gameActive = true;
+        clickCount = 0;
+        initSnakeGame();
+      }
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+      if (gameActive || countdownActive) return;
+      const rect = canvas.getBoundingClientRect();
+      mouseX = e.clientX - rect.left;
+      mouseY = e.clientY - rect.top;
+      
+      // Add new point to pattern
+      if (Math.random() > 0.5) {
+        const colorChoice = Math.random();
+        let hue;
+        if (colorChoice < 0.33) {
+          hue = 180; // Teal/Cyan
+        } else if (colorChoice < 0.66) {
+          hue = 200; // Baby Blue
+        } else {
+          hue = 160; // Dark Teal/Green
+        }
+        
+        points.push({
+          x: mouseX,
+          y: mouseY,
+          hue: hue,
+          life: 80
+        });
+      }
+    });
+
+    function drawKaleidoscope() {
+      if (gameActive || countdownActive) {
+        requestAnimationFrame(drawKaleidoscope);
+        return;
+      }
+
+      ctx.fillStyle = 'rgba(0, 31, 63, 0.08)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+
+      // Update and draw points
+      points = points.filter(p => p.life > 0);
+      points.forEach(p => {
+        p.life -= 1;
+        const opacity = p.life / 80;
+
+        for (let i = 0; i < 8; i++) {
+          const angle = (Math.PI * 2 / 8) * i;
+          const x = centerX + (p.x - centerX) * Math.cos(angle) - (p.y - centerY) * Math.sin(angle);
+          const y = centerY + (p.x - centerX) * Math.sin(angle) + (p.y - centerY) * Math.cos(angle);
+
+          // Draw multiple octagon layers for pattern with HSL colors
+          const baseColor = `hsl(${p.hue}, 100%, 50%)`;
+          drawOctagon(ctx, x, y, 3 * opacity, baseColor, opacity * 0.6);
+          drawOctagon(ctx, x, y, 6 * opacity, baseColor, opacity * 0.3);
+        }
+      });
+
+      requestAnimationFrame(drawKaleidoscope);
+    }
+
+    // Snake Game
+    let snake, food, direction, nextDirection, score;
+    let countdown = 3;
+    let countdownActive = false;
+    let gameLoopActive = false;
+
+    function initSnakeGame() {
+      countdown = 3;
+      countdownActive = true;
+      
+      const countdownInterval = setInterval(() => {
+        ctx.fillStyle = 'rgb(0, 31, 63)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = 'rgb(0, 153, 153)';
+        ctx.font = 'bold 80px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(countdown, canvas.width / 2, canvas.height / 2);
+        
+        countdown--;
+        
+        if (countdown < 0) {
+          clearInterval(countdownInterval);
+          countdownActive = false;
+          startSnakeGame();
+        }
+      }, 1000);
+    }
+
+    function startSnakeGame() {
+      snake = [{x: 10, y: 10}];
+      food = {x: Math.floor(Math.random() * 20), y: Math.floor(Math.random() * 20)};
+      direction = {x: 1, y: 0};
+      nextDirection = {x: 1, y: 0};
+      score = 0;
+      gameLoopActive = true;
+
+      document.addEventListener('keydown', handleSnakeInput);
+      gameLoopSnake();
+    }
+
+    function handleSnakeInput(e) {
+      const key = e.key.toLowerCase();
+      if (key === 'arrowup' || key === 'w') nextDirection = {x: 0, y: -1};
+      if (key === 'arrowdown' || key === 's') nextDirection = {x: 0, y: 1};
+      if (key === 'arrowleft' || key === 'a') nextDirection = {x: -1, y: 0};
+      if (key === 'arrowright' || key === 'd') nextDirection = {x: 1, y: 0};
+    }
+
+    function gameLoopSnake() {
+      if (!gameLoopActive) return;
+
+      direction = nextDirection;
+      const head = {x: snake[0].x + direction.x, y: snake[0].y + direction.y};
+
+      if (head.x < 0 || head.x >= 20 || head.y < 0 || head.y >= 20 || snake.some(s => s.x === head.x && s.y === head.y)) {
+        gameLoopActive = false;
+        gameActive = false;
+        alert(`Game Over! Score: ${score}`);
+        clickCount = 0;
+        document.removeEventListener('keydown', handleSnakeInput);
+        points = [];
+        return;
+      }
+
+      snake.unshift(head);
+
+      if (head.x === food.x && head.y === food.y) {
+        score++;
+        food = {x: Math.floor(Math.random() * 20), y: Math.floor(Math.random() * 20)};
+      } else {
+        snake.pop();
+      }
+
+      drawSnakeGameOnCanvas();
+      setTimeout(gameLoopSnake, 100);
+    }
+
+    function drawSnakeGameOnCanvas() {
+      ctx.fillStyle = 'rgb(0, 31, 63)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const cellSize = 20;
+
+      ctx.fillStyle = 'rgb(0, 153, 153)';
+      snake.forEach(segment => {
+        ctx.fillRect(segment.x * cellSize, segment.y * cellSize, cellSize - 2, cellSize - 2);
+      });
+
+      ctx.fillStyle = 'rgb(255, 255, 255)';
+      ctx.fillRect(food.x * cellSize, food.y * cellSize, cellSize - 2, cellSize - 2);
+
+      ctx.fillStyle = 'rgb(255, 255, 255)';
+      ctx.font = '16px Arial';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      ctx.fillText(`Score: ${score}`, 10, 10);
+      ctx.fillText('Double-click to exit', 10, 30);
+    }
+
+    drawKaleidoscope();
   </script>
 
 </body>
