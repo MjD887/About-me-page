@@ -24,7 +24,6 @@
   <div id="funFacts" class="tab-content active">
     <section>
       <h1>Michael Dultsin</h1>
-      <img src="homoerectus.jpeg" alt="Michael's picture">
     </section>
 
     <section>
@@ -52,8 +51,9 @@
   <!-- More Stuff Tab -->
   <div id="moreStuff" class="tab-content">
     <h2>More Stuff</h2>
-    <!-- Embedded YouTube Video with Start Time -->
-    <iframe width="560" height="315" src="https://www.youtube.com/embed/SQyzaavIaoA?start=6" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+    <img src="homoerectus.jpeg" alt="Michael's picture" style="width: 200px; height: auto; border-radius: 10px; margin: 20px 0;">
+    <!-- Embedded YouTube Video -->
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/Mv7J2CLBYBk?start=2" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
   </div>
 
   <!-- New Tab -->
@@ -130,24 +130,30 @@
       mouseX = e.clientX - rect.left;
       mouseY = e.clientY - rect.top;
       
-      // Add new point to pattern
+      // Add new points in pentagon pattern around mouse
       if (Math.random() > 0.5) {
-        const colorChoice = Math.random();
-        let hue;
-        if (colorChoice < 0.33) {
-          hue = 180; // Teal/Cyan
-        } else if (colorChoice < 0.66) {
-          hue = 200; // Baby Blue
-        } else {
-          hue = 160; // Dark Teal/Green
+        for (let i = 0; i < 5; i++) {
+          const angle = (Math.PI * 2 / 5) * i;
+          const offsetX = Math.cos(angle) * 15;
+          const offsetY = Math.sin(angle) * 15;
+          
+          const colorChoice = Math.random();
+          let hue;
+          if (colorChoice < 0.33) {
+            hue = 180; // Teal/Cyan
+          } else if (colorChoice < 0.66) {
+            hue = 200; // Baby Blue
+          } else {
+            hue = 160; // Dark Teal/Green
+          }
+          
+          points.push({
+            x: mouseX + offsetX,
+            y: mouseY + offsetY,
+            hue: hue,
+            life: 80
+          });
         }
-        
-        points.push({
-          x: mouseX,
-          y: mouseY,
-          hue: hue,
-          life: 80
-        });
       }
     });
 
@@ -157,7 +163,7 @@
         return;
       }
 
-      ctx.fillStyle = 'rgba(0, 31, 63, 0.08)';
+      ctx.fillStyle = 'rgba(0, 31, 63, 0.12)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       const centerX = canvas.width / 2;
@@ -169,15 +175,14 @@
         p.life -= 1;
         const opacity = p.life / 80;
 
-        for (let i = 0; i < 8; i++) {
-          const angle = (Math.PI * 2 / 8) * i;
+        for (let i = 0; i < 5; i++) {
+          const angle = (Math.PI * 2 / 5) * i;
           const x = centerX + (p.x - centerX) * Math.cos(angle) - (p.y - centerY) * Math.sin(angle);
           const y = centerY + (p.x - centerX) * Math.sin(angle) + (p.y - centerY) * Math.cos(angle);
 
-          // Draw multiple octagon layers for pattern with HSL colors
+          // Draw single octagon layer for cleaner effect
           const baseColor = `hsl(${p.hue}, 100%, 50%)`;
-          drawOctagon(ctx, x, y, 3 * opacity, baseColor, opacity * 0.6);
-          drawOctagon(ctx, x, y, 6 * opacity, baseColor, opacity * 0.3);
+          drawOctagon(ctx, x, y, 4 * opacity, baseColor, opacity * 0.5);
         }
       });
 
@@ -186,12 +191,12 @@
 
     // Snake Game
     let snake, food, direction, nextDirection, score;
-    let countdown = 3;
+    let countdown = 5;
     let countdownActive = false;
     let gameLoopActive = false;
 
     function initSnakeGame() {
-      countdown = 3;
+      countdown = 5;
       countdownActive = true;
       
       const countdownInterval = setInterval(() => {
@@ -242,10 +247,8 @@
       if (head.x < 0 || head.x >= 20 || head.y < 0 || head.y >= 20 || snake.some(s => s.x === head.x && s.y === head.y)) {
         gameLoopActive = false;
         gameActive = false;
-        alert(`Game Over! Score: ${score}`);
-        clickCount = 0;
         document.removeEventListener('keydown', handleSnakeInput);
-        points = [];
+        playExplosionEffect();
         return;
       }
 
@@ -282,6 +285,76 @@
       ctx.textBaseline = 'top';
       ctx.fillText(`Score: ${score}`, 10, 10);
       ctx.fillText('Double-click to exit', 10, 30);
+    }
+
+    function playExplosionEffect() {
+      let explosionRadius = 0;
+      const maxRadius = 150;
+      const cellSize = 20;
+      let explosionAlpha = 1;
+
+      function drawExplosion() {
+        // Draw base game
+        ctx.fillStyle = 'rgb(0, 31, 63)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+
+        // Draw pixelized explosion ripple
+        for (let x = 0; x < 20; x++) {
+          for (let y = 0; y < 20; y++) {
+            const distance = Math.sqrt(Math.pow(x - 10, 2) + Math.pow(y - 10, 2)) * cellSize;
+            
+            // Explosion ripple effect with red and orange colors
+            if (distance < explosionRadius && distance > explosionRadius - 30) {
+              const colors = ['rgb(255, 100, 0)', 'rgb(255, 50, 50)'];
+              const hue = colors[Math.floor(Math.random() * colors.length)];
+              const fadeAmount = 1 - (distance - (explosionRadius - 30)) / 30;
+              const rgbMatch = hue.match(/\d+/g);
+              ctx.fillStyle = `rgba(${rgbMatch[0]}, ${rgbMatch[1]}, ${rgbMatch[2]}, ${explosionAlpha * fadeAmount})`;
+              ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+            }
+          }
+        }
+
+        explosionRadius += 6;
+        explosionAlpha -= 0.015;
+
+        if (explosionRadius < maxRadius && explosionAlpha > 0) {
+          requestAnimationFrame(drawExplosion);
+        } else {
+          flashFade();
+        }
+      }
+
+      drawExplosion();
+    }
+
+    function flashFade() {
+      let flashAlpha = 1;
+      const flashDuration = 300;
+      const startTime = Date.now();
+
+      function drawFlash() {
+        const elapsed = Date.now() - startTime;
+        flashAlpha = Math.max(0, 1 - (elapsed / flashDuration));
+
+        ctx.fillStyle = `rgba(255, 255, 255, ${flashAlpha * 0.6})`;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        if (flashAlpha > 0) {
+          requestAnimationFrame(drawFlash);
+        } else {
+          setTimeout(() => {
+            alert(`Game Over! Score: ${score}`);
+            clickCount = 0;
+            points = [];
+          }, 100);
+        }
+      }
+
+      drawFlash();
     }
 
     drawKaleidoscope();

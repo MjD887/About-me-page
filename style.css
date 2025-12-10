@@ -3,14 +3,14 @@ body {
   margin: 0;
   padding: 0;
   font-family: 'Arial', sans-serif;
-  background-color: rgb(0, 31, 63); /* Navy blue */
-  color: rgb(255, 255, 255); /* White text */
+  background: linear-gradient(135deg, rgb(0, 31, 63) 0%, rgb(0, 50, 85) 100%);
+  color: rgb(255, 255, 255);
 }
 
 /* Tabs */
 .tabs {
   display: flex;
-  background-color: rgb(0, 31, 63);
+  background: linear-gradient(90deg, rgb(0, 31, 63) 0%, rgb(0, 45, 80) 100%);
   border-bottom: 2px solid rgb(0, 153, 153);
 }
 
@@ -44,6 +44,10 @@ body {
 
 .tab-content.active {
   display: flex;
+}
+
+#funFacts {
+  background: linear-gradient(135deg, rgb(0, 45, 90) 0%, rgb(70, 130, 180) 100%);
 }
 
 /* Sections (cards) */
@@ -219,4 +223,47 @@ button {
 button:hover {
   background-color: rgba(0, 153, 153, 0.8);
 }
+
+function playExplosionEffect() {
+      let explosionRadius = 0;
+      const maxRadius = Math.sqrt(Math.pow(200, 2) + Math.pow(200, 2));
+      const cellSize = 20;
+      let explosionAlpha = 1;
+
+      function drawExplosion() {
+        // Draw base game
+        ctx.fillStyle = 'rgb(0, 31, 63)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+
+        // Draw pixelized explosion ripple
+        for (let x = 0; x < 20; x++) {
+          for (let y = 0; y < 20; y++) {
+            const distance = Math.sqrt(Math.pow(x - 10, 2) + Math.pow(y - 10, 2)) * cellSize;
+            
+            // Explosion ripple effect with red and orange colors
+            if (distance < explosionRadius && distance > explosionRadius - 40) {
+              const hue = Math.random() > 0.5 ? 'rgb(255, 100, 0)' : 'rgb(255, 50, 50)'; // Orange or Red
+              const fadeAmount = 1 - (distance - (explosionRadius - 40)) / 40;
+              ctx.fillStyle = hue.replace('rgb', 'rgba').replace(')', `, ${explosionAlpha * fadeAmount})`);
+              ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+            }
+          }
+        }
+
+        explosionRadius += 8;
+        explosionAlpha -= 0.02;
+
+        if (explosionRadius < maxRadius && explosionAlpha > 0) {
+          requestAnimationFrame(drawExplosion);
+        } else {
+          // Flash fade effect
+          flashFade();
+        }
+      }
+
+      drawExplosion();
+    }
 
