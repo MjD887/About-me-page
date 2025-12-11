@@ -52,6 +52,7 @@
   <div id="moreStuff" class="tab-content">
     <h2>More Stuff</h2>
     <img src="homoerectus.jpeg" alt="Michael's picture" style="width: 200px; height: auto; border-radius: 10px; margin: 20px 0;">
+    <img src="trumpflexing.png" alt="Trump flexing" style="width: 300px; height: auto; border-radius: 10px; margin: 20px 0;">
     <!-- Embedded YouTube Video -->
     <iframe width="560" height="315" src="https://www.youtube.com/embed/Mv7J2CLBYBk?start=2" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
   </div>
@@ -191,12 +192,12 @@
 
     // Snake Game
     let snake, food, direction, nextDirection, score;
-    let countdown = 5;
+    let countdown = 3;
     let countdownActive = false;
     let gameLoopActive = false;
 
     function initSnakeGame() {
-      countdown = 5;
+      countdown = 3;
       countdownActive = true;
       
       const countdownInterval = setInterval(() => {
@@ -232,6 +233,12 @@
 
     function handleSnakeInput(e) {
       const key = e.key.toLowerCase();
+      const arrowKeys = ['arrowup', 'arrowdown', 'arrowleft', 'arrowright'];
+      
+      if (arrowKeys.includes(key)) {
+        e.preventDefault();
+      }
+      
       if (key === 'arrowup' || key === 'w') nextDirection = {x: 0, y: -1};
       if (key === 'arrowdown' || key === 's') nextDirection = {x: 0, y: 1};
       if (key === 'arrowleft' || key === 'a') nextDirection = {x: -1, y: 0};

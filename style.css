@@ -113,7 +113,7 @@ img {
 
 /* New Tab Gradient */
 #newTab {
-  background: linear-gradient(135deg, rgba(0, 0, 0, 0.7) 70%, #a4c7e7 30%); /* Black and Baby Blue gradient */
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.7) 70%, #a4c7e7 30%);
   color: white;
   padding: 20px;
   border-radius: 12px;
@@ -123,7 +123,7 @@ img {
 
 /* More Stuff tab */
 #moreStuff {
-  background-color: rgb(245, 245, 220); /* Beige */
+  background-color: rgb(245, 245, 220);
   color: rgb(0, 31, 63);
   padding: 20px;
   border-radius: 12px;
@@ -138,57 +138,6 @@ img {
 #moreStuff iframe {
   max-width: 100%;
   border-radius: 10px;
-}
-
-/* YouTube video container */
-.video-container {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  background-color: rgba(0, 0, 0, 0.3);
-  border: 2px solid rgb(0, 153, 153);
-  border-radius: 10px;
-  padding: 20px;
-  box-shadow: 0 0 15px rgb(0, 153, 153);
-}
-
-/* Hide iframe initially */
-.video-container iframe {
-  display: block;
-  width: 100%;
-  max-width: 560px;
-  height: 315px;
-  border-radius: 8px;
-}
-
-/* Fallback message for video errors */
-.video-fallback {
-  display: none; /* Initially hidden */
-  text-align: center;
-  color: white;
-}
-
-.video-fallback p {
-  margin-bottom: 8px;
-  font-size: 1.1em;
-}
-
-/* Fallback link styling */
-.video-link {
-  display: inline-block;
-  text-decoration: none;
-  background-color: rgb(0, 153, 153);
-  color: rgb(0, 0, 0);
-  padding: 8px 15px;
-  border-radius: 6px;
-  font-weight: bold;
-}
-
-.video-link:hover {
-  background-color: rgba(0, 153, 153, 0.8);
 }
 
 /* Mobile adjustments */
@@ -224,46 +173,8 @@ button:hover {
   background-color: rgba(0, 153, 153, 0.8);
 }
 
-function playExplosionEffect() {
-      let explosionRadius = 0;
-      const maxRadius = Math.sqrt(Math.pow(200, 2) + Math.pow(200, 2));
-      const cellSize = 20;
-      let explosionAlpha = 1;
-
-      function drawExplosion() {
-        // Draw base game
-        ctx.fillStyle = 'rgb(0, 31, 63)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        const centerX = canvas.width / 2;
-        const centerY = canvas.height / 2;
-
-        // Draw pixelized explosion ripple
-        for (let x = 0; x < 20; x++) {
-          for (let y = 0; y < 20; y++) {
-            const distance = Math.sqrt(Math.pow(x - 10, 2) + Math.pow(y - 10, 2)) * cellSize;
-            
-            // Explosion ripple effect with red and orange colors
-            if (distance < explosionRadius && distance > explosionRadius - 40) {
-              const hue = Math.random() > 0.5 ? 'rgb(255, 100, 0)' : 'rgb(255, 50, 50)'; // Orange or Red
-              const fadeAmount = 1 - (distance - (explosionRadius - 40)) / 40;
-              ctx.fillStyle = hue.replace('rgb', 'rgba').replace(')', `, ${explosionAlpha * fadeAmount})`);
-              ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
-            }
-          }
-        }
-
-        explosionRadius += 8;
-        explosionAlpha -= 0.02;
-
-        if (explosionRadius < maxRadius && explosionAlpha > 0) {
-          requestAnimationFrame(drawExplosion);
-        } else {
-          // Flash fade effect
-          flashFade();
-        }
-      }
-
-      drawExplosion();
-    }
-
+/* Canvas styling */
+canvas {
+  display: block;
+  margin: 0 auto;
+}
