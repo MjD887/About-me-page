@@ -17,7 +17,7 @@
   <div class="tabs">
     <div class="tab active" onclick="showTab('funFacts')">Fun Facts</div>
     <div class="tab" onclick="showTab('moreStuff')">More Stuff</div>
-    <div class="tab" onclick="showTab('newTab')">New Tab</div>
+    <div class="tab" onclick="showTab('newTab')">Games</div>
   </div>
 
   <!-- Fun Facts Tab -->
@@ -52,19 +52,25 @@
   <div id="moreStuff" class="tab-content">
     <h2>More Stuff</h2>
     <img src="homoerectus.jpeg" alt="Michael's picture" style="width: 200px; height: auto; border-radius: 10px; margin: 20px 0;">
-    <img src="trumpflexing.png" alt="Trump flexing" style="width: 300px; height: auto; border-radius: 10px; margin: 20px 0;">
-    <!-- Embedded YouTube Video -->
     <iframe width="560" height="315" src="https://www.youtube.com/embed/Mv7J2CLBYBk?start=2" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
   </div>
 
-  <!-- New Tab -->
+  <!-- Games Tab -->
   <div id="newTab" class="tab-content">
-    <h2>New Tab</h2>
+    <h2>Games</h2>
     <p>Here's some other cool stuff about me!</p>
     
-    <div style="display: flex; justify-content: center; align-items: center; min-height: 60vh;">
+    <div style="display: flex; justify-content: center; align-items: center; min-height: 60vh; gap: 40px;">
+      <!-- Snake/Kaleidoscope Game -->
       <section style="width: 400px; height: 400px; padding: 0; display: flex; align-items: center; justify-content: center;">
         <canvas id="kaleidoscope" width="400" height="400" style="border-radius: 10px; cursor: crosshair; display: block;"></canvas>
+      </section>
+      
+      <!-- Flappy Chicken Game -->
+      <section style="width: 400px; height: 400px; padding: 0; display: flex; align-items: center; justify-content: center; position: relative;">
+        <canvas id="flappyChicken" width="400" height="400" style="border-radius: 10px; cursor: pointer; display: block; background: linear-gradient(to bottom, #FF6B35 0%, #FF8C42 30%, #FFC93C 60%, #87CEEB 100%);"></canvas>
+        <div id="flappyTitle" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 32px; font-weight: bold; font-family: 'Comic Sans MS', 'Chalkboard SE', 'Arial Black', cursive; color: rgba(255, 255, 255, 0.8); text-shadow: 2px 2px 4px rgba(0,0,0,0.5); z-index: 10; pointer-events: none;">Flappy Chicken</div>
+        <div id="flappyScore" style="position: absolute; top: 15px; left: 15px; font-size: 20px; font-weight: bold; color: white; text-shadow: 1px 1px 3px rgba(0,0,0,0.7); z-index: 10; pointer-events: none;">Score: 0</div>
       </section>
     </div>
   </div>
@@ -239,10 +245,16 @@
         e.preventDefault();
       }
       
-      if (key === 'arrowup' || key === 'w') nextDirection = {x: 0, y: -1};
-      if (key === 'arrowdown' || key === 's') nextDirection = {x: 0, y: 1};
-      if (key === 'arrowleft' || key === 'a') nextDirection = {x: -1, y: 0};
-      if (key === 'arrowright' || key === 'd') nextDirection = {x: 1, y: 0};
+      let newDirection = null;
+      if (key === 'arrowup' || key === 'w') newDirection = {x: 0, y: -1};
+      if (key === 'arrowdown' || key === 's') newDirection = {x: 0, y: 1};
+      if (key === 'arrowleft' || key === 'a') newDirection = {x: -1, y: 0};
+      if (key === 'arrowright' || key === 'd') newDirection = {x: 1, y: 0};
+      
+      // Prevent reversing into the snake's body
+      if (newDirection && !(newDirection.x === -direction.x && newDirection.y === -direction.y)) {
+        nextDirection = newDirection;
+      }
     }
 
     function gameLoopSnake() {
@@ -364,6 +376,312 @@
       drawFlash();
     }
 
+    // Flappy Chicken Game
+    const flappyCanvas = document.getElementById('flappyChicken');
+    const flappyCtx = flappyCanvas.getContext('2d');
+    let flappyGameActive = false;
+    let flappyScore = 0;
+    let flappyHighScore = localStorage.getItem('flappyHighScore') ? parseInt(localStorage.getItem('flappyHighScore')) : 0;
+    let flappyGameStarted = false;
+    let flappyGameOver = false;
+
+    let flappyChicken = {
+      x: 50,
+      y: 150,
+      width: 30,
+      height: 30,
+      velocityY: 0,
+      gravity: 0.25,
+      flapPower: -7
+    };
+
+    let flappyPipes = [];
+    let flappyPipeWidth = 60;
+    let flappyPipeGap = 140;
+    let flappyPipeSpeed = 2;
+    let flappyPipeSpawnTimer = 0;
+
+    function drawChicken(x, y, width, height) {
+      const pixelSize = 2;
+      
+      // Body (golden/orange pixelated)
+      flappyCtx.fillStyle = '#FFD700';
+      flappyCtx.fillRect(x - 8, y - 4, 16, 12);
+      
+      // Darker shading on body
+      flappyCtx.fillStyle = '#FFC700';
+      flappyCtx.fillRect(x - 8, y + 4, 16, 4);
+      
+      // Head
+      flappyCtx.fillStyle = '#FFD700';
+      flappyCtx.fillRect(x + 4, y - 12, 8, 8);
+      
+      // Comb (red pixelated)
+      flappyCtx.fillStyle = '#FF4444';
+      flappyCtx.fillRect(x + 6, y - 14, 4, 2);
+      flappyCtx.fillRect(x + 8, y - 16, 2, 2);
+      flappyCtx.fillRect(x + 4, y - 15, 2, 2);
+      
+      // Eye (black)
+      flappyCtx.fillStyle = '#000000';
+      flappyCtx.fillRect(x + 7, y - 10, 2, 2);
+      flappyCtx.fillStyle = '#FFFFFF';
+      flappyCtx.fillRect(x + 8, y - 10, 1, 1);
+      
+      // Beak (orange)
+      flappyCtx.fillStyle = '#FF8C00';
+      flappyCtx.fillRect(x + 12, y - 8, 4, 2);
+      
+      // Wing (darker gold)
+      flappyCtx.fillStyle = '#FFA500';
+      flappyCtx.fillRect(x - 10, y - 4, 6, 8);
+      
+      // Tail feathers
+      flappyCtx.fillStyle = '#FF8C00';
+      flappyCtx.fillRect(x - 12, y - 4, 2, 2);
+      flappyCtx.fillRect(x - 14, y, 2, 2);
+      flappyCtx.fillRect(x - 12, y + 4, 2, 2);
+    }
+
+    function drawFlappyPipe(pipe) {
+      // Top pipe with detailed texture
+      const topPipeHeight = pipe.topHeight;
+      flappyCtx.fillStyle = '#FFD700';
+      flappyCtx.fillRect(pipe.x, 0, flappyPipeWidth, topPipeHeight);
+      
+      // Add textured details to top pipe
+      for (let py = 0; py < topPipeHeight; py += 4) {
+        for (let px = pipe.x; px < pipe.x + flappyPipeWidth; px += 4) {
+          if (Math.random() > 0.6) {
+            flappyCtx.fillStyle = '#FFC700';
+            flappyCtx.fillRect(px, py, 2, 2);
+          }
+          if (Math.random() > 0.7) {
+            flappyCtx.fillStyle = '#FFFFFF';
+            flappyCtx.fillRect(px + 2, py + 2, 1, 1);
+          }
+        }
+      }
+      
+      // Bottom pipe with detailed texture
+      const bottomPipeStart = pipe.topHeight + flappyPipeGap;
+      const bottomPipeHeight = flappyCanvas.height - bottomPipeStart;
+      flappyCtx.fillStyle = '#FFD700';
+      flappyCtx.fillRect(pipe.x, bottomPipeStart, flappyPipeWidth, bottomPipeHeight);
+      
+      // Add textured details to bottom pipe
+      for (let py = bottomPipeStart; py < flappyCanvas.height; py += 4) {
+        for (let px = pipe.x; px < pipe.x + flappyPipeWidth; px += 4) {
+          if (Math.random() > 0.6) {
+            flappyCtx.fillStyle = '#FFC700';
+            flappyCtx.fillRect(px, py, 2, 2);
+          }
+          if (Math.random() > 0.7) {
+            flappyCtx.fillStyle = '#FFFFFF';
+            flappyCtx.fillRect(px + 2, py + 2, 1, 1);
+          }
+        }
+      }
+      
+      // Pipe edges
+      flappyCtx.strokeStyle = '#FFA500';
+      flappyCtx.lineWidth = 2;
+      flappyCtx.strokeRect(pipe.x, 0, flappyPipeWidth, topPipeHeight);
+      flappyCtx.strokeRect(pipe.x, bottomPipeStart, flappyPipeWidth, bottomPipeHeight);
+    }
+
+    function updateFlappyGame() {
+      if (!flappyGameStarted) return;
+
+      // Update chicken
+      flappyChicken.velocityY += flappyChicken.gravity;
+      flappyChicken.y += flappyChicken.velocityY;
+
+      // Boundary collision
+      if (flappyChicken.y - flappyChicken.height / 2 < 0 || flappyChicken.y + flappyChicken.height / 2 > flappyCanvas.height) {
+        endFlappyGame();
+        return;
+      }
+
+      // Spawn pipes
+      flappyPipeSpawnTimer++;
+      if (flappyPipeSpawnTimer > 90) {
+        const topHeight = Math.random() * (flappyCanvas.height - flappyPipeGap - 80) + 40;
+        flappyPipes.push({
+          x: flappyCanvas.width,
+          topHeight: topHeight,
+          scored: false
+        });
+        flappyPipeSpawnTimer = 0;
+      }
+
+      // Update pipes
+      for (let i = flappyPipes.length - 1; i >= 0; i--) {
+        flappyPipes[i].x -= flappyPipeSpeed;
+
+        // Scoring
+        if (!flappyPipes[i].scored && flappyPipes[i].x + flappyPipeWidth < flappyChicken.x) {
+          flappyScore++;
+          flappyPipes[i].scored = true;
+        }
+
+        // Collision detection
+        if (flappyChicken.x + flappyChicken.width / 2 > flappyPipes[i].x &&
+            flappyChicken.x - flappyChicken.width / 2 < flappyPipes[i].x + flappyPipeWidth) {
+          if (flappyChicken.y - flappyChicken.height / 2 < flappyPipes[i].topHeight ||
+              flappyChicken.y + flappyChicken.height / 2 > flappyPipes[i].topHeight + flappyPipeGap) {
+            endFlappyGame();
+            return;
+          }
+        }
+
+        // Remove pipes off screen
+        if (flappyPipes[i].x + flappyPipeWidth < 0) {
+          flappyPipes.splice(i, 1);
+        }
+      }
+    }
+
+    function drawFlappyGame() {
+      // Create fading sunset sky (not gradient)
+      const pixelSize = 4;
+      
+      // Draw sky with fading effect from top to bottom
+      for (let py = 0; py < flappyCanvas.height; py += pixelSize) {
+        const fadeProgress = py / flappyCanvas.height;
+        
+        // Interpolate between sunset colors with fading
+        let r, g, b;
+        
+        if (fadeProgress < 0.33) {
+          // Top: deep red/orange
+          r = 255;
+          g = Math.floor(61 + (87 - 61) * (fadeProgress / 0.33));
+          b = 0;
+        } else if (fadeProgress < 0.67) {
+          // Middle: orange to golden
+          const t = (fadeProgress - 0.33) / 0.34;
+          r = 255;
+          g = Math.floor(148 + (185 - 148) * t);
+          b = Math.floor(0 + (59 - 0) * t);
+        } else {
+          // Bottom: golden to sky blue
+          const t = (fadeProgress - 0.67) / 0.33;
+          r = Math.floor(255 - (135 - 255) * t);
+          g = Math.floor(206 - (206 - 206) * t);
+          b = Math.floor(59 + (235 - 59) * t);
+        }
+        
+        flappyCtx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+        for (let px = 0; px < flappyCanvas.width; px += pixelSize) {
+          // Add subtle noise
+          if (Math.random() > 0.9) {
+            flappyCtx.fillStyle = `rgb(${Math.max(0, r - 20)}, ${Math.max(0, g - 20)}, ${Math.min(255, b + 20)})`;
+          }
+          flappyCtx.fillRect(px, py, pixelSize, pixelSize);
+          flappyCtx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+        }
+      }
+
+      // Draw pixelated sun
+      const sunX = 320;
+      const sunY = 80;
+      const sunRadius = 30;
+      flappyCtx.fillStyle = '#FFFF00';
+      for (let dy = -sunRadius; dy <= sunRadius; dy += 4) {
+        for (let dx = -sunRadius; dx <= sunRadius; dx += 4) {
+          if (dx * dx + dy * dy <= sunRadius * sunRadius) {
+            flappyCtx.fillRect(sunX + dx, sunY + dy, 4, 4);
+          }
+        }
+      }
+      
+      // Sun glow (slightly darker orange)
+      flappyCtx.fillStyle = '#FFB300';
+      for (let dy = -(sunRadius + 8); dy <= (sunRadius + 8); dy += 4) {
+        for (let dx = -(sunRadius + 8); dx <= (sunRadius + 8); dx += 4) {
+          if ((dx * dx + dy * dy <= (sunRadius + 8) * (sunRadius + 8)) && 
+              (dx * dx + dy * dy > sunRadius * sunRadius)) {
+            if (Math.random() > 0.5) {
+              flappyCtx.fillRect(sunX + dx, sunY + dy, 4, 4);
+            }
+          }
+        }
+      }
+
+      // Draw pipes
+      flappyPipes.forEach(pipe => drawFlappyPipe(pipe));
+
+      // Draw chicken
+      drawChicken(flappyChicken.x, flappyChicken.y, flappyChicken.width, flappyChicken.height);
+
+      // Draw score and high score
+      flappyCtx.fillStyle = 'white';
+      flappyCtx.font = 'bold 16px Arial';
+      flappyCtx.textAlign = 'left';
+      flappyCtx.textBaseline = 'top';
+      flappyCtx.fillText(`Score: ${flappyScore}`, 10, 10);
+      flappyCtx.fillText(`High Score: ${flappyHighScore}`, 10, 32);
+
+      if (!flappyGameStarted) {
+        flappyCtx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+        flappyCtx.fillRect(0, 0, flappyCanvas.width, flappyCanvas.height);
+        flappyCtx.fillStyle = 'white';
+        flappyCtx.font = 'bold 20px Arial';
+        flappyCtx.textAlign = 'center';
+        flappyCtx.fillText('Click to Start', flappyCanvas.width / 2, flappyCanvas.height / 2);
+      }
+
+      updateFlappyGame();
+      requestAnimationFrame(drawFlappyGame);
+    }
+
+    function endFlappyGame() {
+      flappyGameStarted = false;
+      flappyGameOver = true;
+      
+      // Update high score if current score is higher
+      if (flappyScore > flappyHighScore) {
+        flappyHighScore = flappyScore;
+        localStorage.setItem('flappyHighScore', flappyHighScore);
+      }
+      
+      setTimeout(() => {
+        alert(`Game Over! Score: ${flappyScore}\nHigh Score: ${flappyHighScore}`);
+        resetFlappyGame();
+      }, 100);
+    }
+
+    function resetFlappyGame() {
+      flappyChicken.y = 150;
+      flappyChicken.velocityY = 0;
+      flappyPipes = [];
+      flappyScore = 0;
+      flappyPipeSpawnTimer = 0;
+      flappyGameOver = false;
+      document.getElementById('flappyScore').textContent = `Score: 0`;
+    }
+
+    flappyCanvas.addEventListener('click', () => {
+      if (!flappyGameStarted && !flappyGameOver) {
+        flappyGameStarted = true;
+      } else if (flappyGameStarted) {
+        flappyChicken.velocityY = flappyChicken.flapPower;
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        if (!flappyGameStarted && !flappyGameOver) {
+          flappyGameStarted = true;
+        } else if (flappyGameStarted) {
+          flappyChicken.velocityY = flappyChicken.flapPower;
+        }
+      }
+    });
+
+    drawFlappyGame();
     drawKaleidoscope();
   </script>
 
