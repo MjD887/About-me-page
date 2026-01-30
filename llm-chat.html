@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chat with Web Search</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: transparent;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+        }
+
+        .chat-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 900px;
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .chat-header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .chat-header p {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .status-bar {
+            background: #e7f9f0;
+            padding: 12px 20px;
+            font-size: 13px;
+            color: #059669;
+            border-bottom: 1px solid #d1f5e4;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10a37f;
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f7f7f8;
+        }
+
+        .message {
+            margin-bottom: 16px;
+            display: flex;
+            gap: 12px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .user-avatar {
+            background: #667eea;
+        }
+
+        .ai-avatar {
+            background: #10a37f;
+        }
+
+        .message-content {
+            flex: 1;
+            padding: 12px 16px;
+            border-radius: 12px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .user-message .message-content {
+            background: white;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .ai-message .message-content {
+            background: #f0f0f0;
+        }
+
+        .search-results {
+            margin-top: 12px;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            border-left: 3px solid #667eea;
+        }
+
+        .search-result-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .search-result-title {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 4px;
+        }
+
+        .search-result-snippet {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.4;
+        }
+
+        .search-result-url {
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .search-badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 16px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #999;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .input-area {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e5e5e5;
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        #userInput {
+            flex: 1;
+            border: 2px solid #e5e5e5;
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-size: 15px;
+            font-family: inherit;
+            outline: none;
+            resize: none;
+            max-height: 120px;
+            transition: border-color 0.2s;
+        }
+
+        #userInput:focus {
+            border-color: #667eea;
+        }
+
+        #sendButton {
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 28px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        #sendButton:hover:not(:disabled) {
+            background: #5568d3;
+            transform: translateY(-1px);
+        }
+
+        #sendButton:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .welcome-message {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+
+        .welcome-message h2 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 12px;
+        }
+
+        .feature-list {
+            text-align: left;
+            max-width: 400px;
+            margin: 20px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+        }
+
+        .feature-list li {
+            margin: 8px 0;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>🤖 AI Chat with Web Search</h1>
+            <p>Ask anything - I can search the web for you!</p>
+        </div>
+        <div class="status-bar">
+            <span class="status-indicator"></span>
+            <span>AI Ready with Web Search</span>
+        </div>
+        <div class="messages" id="messages">
+            <div class="welcome-message">
+                <h2>👋 Hello!</h2>
+                <p>I'm your AI assistant with web search capabilities!</p>
+                <div class="feature-list">
+                    <strong>I can:</strong>
+                    <ul>
+                        <li>🌐 Search the web for current information</li>
+                        <li>📰 Find latest news and updates</li>
+                        <li>🔢 Do calculations and conversions</li>
+                        <li>💬 Have natural conversations</li>
+                        <li>⏰ Tell you the time and date</li>
+                    </ul>
+                </div>
+                <p style="font-size: 14px; color: #999;">Try asking: "What's the latest news about AI?" or "Weather in New York"</p>
+            </div>
+        </div>
+        <div class="input-area">
+            <div class="input-wrapper">
+                <textarea 
+                    id="userInput" 
+                    placeholder="Ask me anything or request a web search..." 
+                    rows="1"
+                    autofocus
+                ></textarea>
+                <button id="sendButton">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const messagesDiv = document.getElementById('messages');
+        const userInput = document.getElementById('userInput');
+        const sendButton = document.getElementById('sendButton');
+
+        // Keywords that trigger web search
+        const searchTriggers = [
+            'search', 'find', 'look up', 'google', 'what is', 'who is', 'where is',
+            'latest', 'news', 'current', 'today', 'weather', 'stock', 'price',
+            'when did', 'how many', 'information about', 'tell me about'
+        ];
+
+        // Simple AI responses
+        const responses = {
+            greetings: [
+                "Hello! How can I help you today? I can search the web for you!",
+                "Hi there! Ask me anything - I can look things up online!",
+                "Hey! What can I search for you today?"
+            ],
+            thanks: [
+                "You're welcome! Need anything else?",
+                "Happy to help! Want me to search for something else?",
+                "My pleasure! Just let me know if you need more info."
+            ],
+            help: [
+                "I can search the web for current information, news, facts, and more! Just ask me a question or tell me what to search for.",
+                "Try asking me things like: 'latest news about technology' or 'weather in Tokyo' or 'what is quantum computing'",
+                "I can look up almost anything online! What would you like to know?"
+            ]
+        };
+
+        function shouldSearchWeb(message) {
+            const lowerMsg = message.toLowerCase();
+            return searchTriggers.some(trigger => lowerMsg.includes(trigger)) ||
+                   lowerMsg.includes('?') ||
+                   lowerMsg.split(' ').length > 4;
+        }
+
+        async function searchWeb(query) {
+            try {
+                // Using Wikipedia API as a reliable search source
+                const wikiResponse = await fetch(
+                    `https://en.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(query)}&limit=3&format=json&origin=*`
+                );
+                const wikiData = await wikiResponse.json();
+
+                // Also try a general web search API (SerpAPI alternative - using a simple news API)
+                let newsResults = [];
+                try {
+                    const newsResponse = await fetch(
+                        `https://api.gdeltproject.org/api/v2/doc/doc?query=${encodeURIComponent(query)}&mode=artlist&maxrecords=3&format=json`
+                    );
+                    if (newsResponse.ok) {
+                        const newsData = await newsResponse.json();
+                        if (newsData.articles) {
+                            newsResults = newsData.articles.slice(0, 3);
+                        }
+                    }
+                } catch (e) {
+                    console.log('News search unavailable');
+                }
+
+                const results = [];
+
+                // Add Wikipedia results
+                if (wikiData[1] && wikiData[1].length > 0) {
+                    for (let i = 0; i < Math.min(3, wikiData[1].length); i++) {
+                        results.push({
+                            title: wikiData[1][i],
+                            snippet: wikiData[2][i],
+                            url: wikiData[3][i]
+                        });
+                    }
+                }
+
+                // Add news results
+                newsResults.forEach(article => {
+                    if (article.title && article.url) {
+                        results.push({
+                            title: article.title,
+                            snippet: article.seendate || 'Recent article',
+                            url: article.url
+                        });
+                    }
+                });
+
+                return results;
+            } catch (error) {
+                console.error('Search error:', error);
+                return [];
+            }
+        }
+
+        function getSimpleResponse(message) {
+            const lowerMsg = message.toLowerCase();
+            
+            if (lowerMsg.match(/\b(hi|hello|hey|greetings)\b/)) {
+                return responses.greetings[Math.floor(Math.random() * responses.greetings.length)];
+            }
+            
+            if (lowerMsg.match(/\b(thanks|thank you)\b/)) {
+                return responses.thanks[Math.floor(Math.random() * responses.thanks.length)];
+            }
+            
+            if (lowerMsg.match(/\b(help|what can you do)\b/)) {
+                return responses.help[Math.floor(Math.random() * responses.help.length)];
+            }
+
+            // Time
+            if (lowerMsg.match(/what time|current time|time is it/)) {
+                const now = new Date();
+                return `It's currently ${now.toLocaleTimeString()}`;
+            }
+            
+            // Date
+            if (lowerMsg.match(/what date|today's date|what day/)) {
+                const now = new Date();
+                return `Today is ${now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
+            }
+
+            // Math
+            if (lowerMsg.match(/\d+\s*[\+\-\*\/]\s*\d+/)) {
+                try {
+                    const sanitized = message.match(/[\d\+\-\*\/\.\s()]+/)[0];
+                    const result = eval(sanitized);
+                    return `The answer is ${result}`;
+                } catch {
+                    return "I can help with math! Try something like: 5 + 3";
+                }
+            }
+            
+            return null; // Will trigger web search
+        }
+
+        function addMessage(type, content, searchResults = null) {
+            const welcome = messagesDiv.querySelector('.welcome-message');
+            if (welcome) welcome.remove();
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}-message`;
+            
+            const avatar = document.createElement('div');
+            avatar.className = `message-avatar ${type}-avatar`;
+            avatar.textContent = type === 'user' ? '👤' : '🤖';
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.textContent = content;
+
+            // Add search results if available
+            if (searchResults && searchResults.length > 0) {
+                const resultsDiv = document.createElement('div');
+                resultsDiv.className = 'search-results';
+                
+                const badge = document.createElement('div');
+                badge.className = 'search-badge';
+                badge.textContent = '🔍 Web Search Results';
+                resultsDiv.appendChild(badge);
+
+                searchResults.forEach(result => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'search-result-item';
+                    
+                    const titleDiv = document.createElement('div');
+                    titleDiv.className = 'search-result-title';
+                    titleDiv.textContent = result.title;
+                    
+                    const snippetDiv = document.createElement('div');
+                    snippetDiv.className = 'search-result-snippet';
+                    snippetDiv.textContent = result.snippet;
+                    
+                    const urlDiv = document.createElement('div');
+                    urlDiv.className = 'search-result-url';
+                    const link = document.createElement('a');
+                    link.href = result.url;
+                    link.target = '_blank';
+                    link.textContent = result.url;
+                    link.style.color = '#667eea';
+                    link.style.textDecoration = 'none';
+                    urlDiv.appendChild(link);
+                    
+                    itemDiv.appendChild(titleDiv);
+                    itemDiv.appendChild(snippetDiv);
+                    itemDiv.appendChild(urlDiv);
+                    resultsDiv.appendChild(itemDiv);
+                });
+
+                contentDiv.appendChild(resultsDiv);
+            }
+            
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(contentDiv);
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function showTypingIndicator() {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ai-message';
+            messageDiv.id = 'typing-indicator';
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'message-avatar ai-avatar';
+            avatar.textContent = '🤖';
+            
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message-content typing-indicator';
+            typingDiv.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+            
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(typingDiv);
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+            const indicator = document.getElementById('typing-indicator');
+            if (indicator) indicator.remove();
+        }
+
+        async function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            addMessage('user', message);
+            userInput.value = '';
+            userInput.style.height = 'auto';
+            
+            userInput.disabled = true;
+            sendButton.disabled = true;
+            showTypingIndicator();
+            
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // Check if we have a simple response
+            const simpleResponse = getSimpleResponse(message);
+            
+            if (simpleResponse) {
+                removeTypingIndicator();
+                addMessage('ai', simpleResponse);
+            } else if (shouldSearchWeb(message)) {
+                // Perform web search
+                const searchResults = await searchWeb(message);
+                
+                removeTypingIndicator();
+                
+                if (searchResults.length > 0) {
+                    addMessage('ai', `I found some information about "${message}":`, searchResults);
+                } else {
+                    addMessage('ai', `I searched for "${message}" but couldn't find specific results. Try rephrasing your question or being more specific!`);
+                }
+            } else {
+                removeTypingIndicator();
+                addMessage('ai', "That's interesting! Would you like me to search the web for more information about that?");
+            }
+            
+            userInput.disabled = false;
+            sendButton.disabled = false;
+            userInput.focus();
+        }
+
+        sendButton.addEventListener('click', sendMessage);
+        
+        userInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        userInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        });
+    </script>
+</body>
+</html>

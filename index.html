@@ -3,8 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Michael Dultsin's Fun Facts</title>
+  <meta name="description" content="Michael Dultsin's portfolio - Fun facts, LLM projects, and interactive games">
+  <meta property="og:title" content="Michael Dultsin's About Me">
+  <meta property="og:description" content="Interactive portfolio with games and more">
+  <meta property="og:type" content="website">
+  <title>Michael Dultsin's About Me</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75' fill='%2300CCCC'>M</text></svg>">
   <style>
     html {
       scroll-behavior: auto;
@@ -16,7 +21,7 @@
   <!-- Tabs -->
   <div class="tabs">
     <div class="tab active" data-tab="funFacts">Fun Facts</div>
-    <div class="tab" data-tab="moreStuff">More Stuff</div>
+    <div class="tab" data-tab="moreStuff">LLMs</div>
     <div class="tab" data-tab="newTab">Games</div>
   </div>
 
@@ -36,8 +41,6 @@
     <section>
       <h2>Fun Fact #2</h2>
       <p>I like to play Fortnite.</p>
-      <button class="info-btn">More Info</button>
-      <div class="popup"></div>
     </section>
 
     <section>
@@ -48,34 +51,35 @@
     </section>
   </div>
 
-  <!-- More Stuff Tab -->
+  <!-- LLMs Tab -->
   <div id="moreStuff" class="tab-content">
-    <h2>More Stuff</h2>
-    <img src="homoerectus.jpeg" alt="Michael's picture" style="width: 200px; height: auto; border-radius: 10px; margin: 20px 0;">
-    <iframe width="560" height="315" src="https://www.youtube.com/embed/Mv7J2CLBYBk?start=2" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+    <h2>LLMs</h2>
+    <iframe id="llm-iframe" src="llm-chat.html" title="AI Chat with Web Search"></iframe>
   </div>
 
   <!-- Games Tab -->
   <div id="newTab" class="tab-content">
     <h2>Games</h2>
-    <p style="margin-bottom: 30px; font-size: 1.1em;">Here are some fun games!</p>
     
-    <div style="display: flex; justify-content: center; align-items: flex-start; min-height: 60vh; gap: 40px; flex-wrap: wrap;" class="game-container">
-      <!-- Snake/Kaleidoscope Game -->
-      <div class="game-card" style="width: 420px;">
-        <canvas id="kaleidoscope" width="400" height="400" style="border-radius: 12px; cursor: crosshair; display: block;"></canvas>
+    <div class="game-container">
+      <!-- Kaleidoscope Game -->
+      <div class="game-card game-card-wrapper">
+        <canvas id="kaleidoscope" width="400" height="400" class="kaleidoscope-canvas" aria-label="Kaleidoscope game - move mouse to create patterns"></canvas>
         <p class="game-title">Kaleidoscope</p>
-        <p style="font-size: 0.9em; margin: 5px 0 0 0; color: rgb(200, 200, 200);">Click to spawn patterns</p>
       </div>
       
       <!-- Flappy Chicken Game -->
-      <div class="game-card" style="width: 420px;">
-        <canvas id="flappyChicken" width="400" height="400" style="border-radius: 12px; cursor: pointer; display: block; background: linear-gradient(to bottom, #FF6B35 0%, #FF8C42 30%, #FFC93C 60%, #87CEEB 100%);"></canvas>
+      <div class="game-card game-card-wrapper">
+        <canvas id="flappyChicken" width="400" height="400" class="flappy-chicken-canvas" aria-label="Flappy Chicken game - click or press space to flap"></canvas>
         <p class="game-title">Flappy Chicken</p>
-        <p style="font-size: 0.9em; margin: 5px 0 0 0; color: rgb(200, 200, 200);">Click/Space to flap</p>
       </div>
     </div>
   </div>
+
+  <!-- Footer -->
+  <footer>
+    <p>&copy; 2026 Michael Dultsin | <a href="https://github.com/MjD887" target="_blank" rel="noopener noreferrer">GitHub</a></p>
+  </footer>
 
   <!-- JavaScript -->
   <script src="script.js"></script>

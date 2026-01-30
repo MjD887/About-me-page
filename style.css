@@ -139,7 +139,7 @@ img {
 #moreStuff {
   background: linear-gradient(135deg, rgb(220, 220, 200) 0%, rgb(240, 240, 220) 100%);
   color: rgb(0, 31, 63);
-  padding: 30px;
+  padding: 20px;
   border-radius: 0;
   box-shadow: none;
   align-items: center;
@@ -152,6 +152,16 @@ img {
 #moreStuff h2 {
   color: rgb(0, 31, 63);
   margin-bottom: 20px;
+  margin-top: 0;
+}
+
+#llm-iframe {
+  width: 100%;
+  max-width: 900px;
+  height: 80vh;
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
 }
 
 #moreStuff img {
@@ -164,6 +174,12 @@ img {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
 }
 
+/* Games intro text */
+.games-intro {
+  margin-bottom: 30px;
+  font-size: 1.1em;
+}
+
 /* Mobile adjustments */
 @media (max-width: 900px) {
   .game-container {
@@ -171,7 +187,7 @@ img {
     gap: 30px !important;
   }
   
-  .game-card {
+  .game-card-wrapper {
     width: 100% !important;
   }
 }
@@ -250,4 +266,64 @@ canvas {
   font-weight: 600;
   color: rgb(0, 200, 200);
   margin-top: 10px;
+}
+
+/* Game container */
+.game-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 60vh;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+
+/* Canvas styling */
+.kaleidoscope-canvas {
+  border-radius: 12px;
+  cursor: crosshair;
+  display: block;
+}
+
+.flappy-chicken-canvas {
+  border-radius: 12px;
+  cursor: pointer;
+  display: block;
+  background: linear-gradient(to bottom, #FF6B35 0%, #FF8C42 30%, #FFC93C 60%, #87CEEB 100%);
+}
+
+/* Game card wrapper */
+.game-card-wrapper {
+  width: 420px;
+}
+
+/* Game instructions text */
+.game-instructions {
+  font-size: 0.9em;
+  margin: 5px 0 0 0;
+  color: rgb(200, 200, 200);
+}
+
+/* Footer */
+footer {
+  background: linear-gradient(90deg, rgb(10, 28, 45) 0%, rgb(20, 48, 75) 100%);
+  border-top: 2px solid rgba(0, 153, 153, 0.5);
+  padding: 20px;
+  text-align: center;
+  color: rgb(200, 200, 200);
+  font-size: 0.9em;
+  margin-top: 40px;
+}
+
+footer a {
+  color: rgb(0, 200, 200);
+  text-decoration: none;
+}
+
+footer a:hover {
+  color: rgb(0, 255, 255);
+}
+
+footer p {
+  margin: 0;
 }
